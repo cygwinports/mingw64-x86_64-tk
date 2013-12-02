@@ -1,0 +1,48 @@
+CROSS_HOST="x86_64-w64-mingw32"
+inherit cross
+
+NAME="mingw64-x86_64-tk"
+VERSION=8.5.15
+RELEASE=1
+CATEGORY="Devel"
+SUMMARY="Tcl GUI toolkit for Win64 toolchain"
+DESCRIPTION="This package does NOT contain cygwin binaries.  Instead, it
+contains msvcrt-linked binaries (aka 'mingw').  It is for use with the
+mingw64-x86_64-gcc cross compiler, and installs into the
+/usr/x86_64-w64-mingw32/sys-root/mingw/{lib,include} directories."
+HOMEPAGE="http://tcl.tk/"
+SRC_URI="mirror://sourceforge/tcl/tk${VERSION}-src.tar.gz"
+SRC_DIR="tk${VERSION}"
+PATCH_URI="
+	http://pkgs.fedoraproject.org/cgit/mingw-tk.git/plain/tk-seg_input.patch
+	http://pkgs.fedoraproject.org/cgit/mingw-tk.git/plain/tk-mingw-w64-compatibility-fix.patch
+"
+
+slot=${PV_MAJ_MIN}
+
+src_compile() {
+	lndirs
+	cd ${B}/win
+	cygconf --with-tcl=${CROSS_LIBDIR} --includedir=${CROSS_INCLUDEDIR}/tcl${slot}
+	cygmake -j1
+}
+
+src_install() {
+	cd ${B}/win
+	USE_DESTDIR=0
+	cyginstall includedir=${D}${CROSS_INCLUDEDIR}/tcl${slot}
+
+	sed -i \
+		-e "s|^\(TK_BUILD_LIB_SPEC\)='.*|\1='-Wl,${CROSS_LIBDIR}/libtk${slot//.}.a'|" \
+		-e "s|^\(TK_SRC_DIR\)='.*'|\1='${CROSS_INCLUDEDIR}/tcl${slot}'|" \
+		-e "s|^\(TK_BUILD_STUB_LIB_SPEC\)='.*|\1='-Wl,${CROSS_LIBDIR}/libtkstub${slot//.}.a'|" \
+		-e "s|^\(TK_BUILD_STUB_LIB_PATH\)='.*/win|\1='${CROSS_LIBDIR}|" \
+		-e "s|^\(TK_STUB_LIB_SPEC\)='.*|\1='-Wl,-ltkstub${slot//.}'|" \
+		${D}${CROSS_LIBDIR}/tkConfig.sh || error
+
+	# install private headers
+	includeinto tcl${slot}/win
+	doinclude ${S}/win/*.h
+	includeinto tcl${slot}/generic
+	doinclude ${S}/generic/*.h
+}
