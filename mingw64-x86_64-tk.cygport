@@ -2,7 +2,7 @@ CROSS_HOST="x86_64-w64-mingw32"
 inherit cross
 
 NAME="mingw64-x86_64-tk"
-VERSION=8.5.15
+VERSION=8.6.6
 RELEASE=1
 CATEGORY="Devel"
 SUMMARY="Tcl GUI toolkit for Win64 toolchain"
@@ -13,24 +13,20 @@ mingw64-x86_64-gcc cross compiler, and installs into the
 HOMEPAGE="http://tcl.tk/"
 SRC_URI="mirror://sourceforge/tcl/tk${VERSION}-src.tar.gz"
 SRC_DIR="tk${VERSION}"
-PATCH_URI="
-	http://pkgs.fedoraproject.org/cgit/mingw-tk.git/plain/tk-seg_input.patch
-	http://pkgs.fedoraproject.org/cgit/mingw-tk.git/plain/tk-mingw-w64-compatibility-fix.patch
-"
 
 slot=${PV_MAJ_MIN}
 
 src_compile() {
 	lndirs
 	cd ${B}/win
-	cygconf --with-tcl=${CROSS_LIBDIR} --includedir=${CROSS_INCLUDEDIR}/tcl${slot}
-	cygmake -j1
+	cygconf --with-tcl=${CROSS_LIBDIR} --with-64bit
+	cygmake -j1 CYGPATH=echo
 }
 
 src_install() {
 	cd ${B}/win
 	USE_DESTDIR=0
-	cyginstall includedir=${D}${CROSS_INCLUDEDIR}/tcl${slot}
+	cyginstall
 
 	sed -i \
 		-e "s|^\(TK_BUILD_LIB_SPEC\)='.*|\1='-Wl,${CROSS_LIBDIR}/libtk${slot//.}.a'|" \
