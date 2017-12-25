@@ -2,7 +2,7 @@ CROSS_HOST="x86_64-w64-mingw32"
 inherit cross
 
 NAME="mingw64-x86_64-tk"
-VERSION=8.6.6
+VERSION=8.6.8
 RELEASE=1
 CATEGORY="Devel"
 SUMMARY="Tcl GUI toolkit for Win64 toolchain"
